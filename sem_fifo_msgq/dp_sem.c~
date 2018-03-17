@@ -1,0 +1,62 @@
+#include<stdio.h>
+#include<unistd.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<sys/sem.h>
+#include<pthread.h>
+
+int chopstick[5];
+union semon
+{int val;
+struct semid_ds *buf;
+unsigned short *array;
+}arg;
+void signal(int semid)
+{
+struct sembuf seop={0,1,0};
+semop(semid,&seop,1);
+}
+void wait(int semid)
+{
+struct sembuf seop={0,-1,0};
+semop(semid,&seop,1);
+}
+
+
+void *philospher(void *arg)
+{
+int i=*(int*)arg+1;
+while(1)
+{semctl(chopstick[i-1],0,GETVAL,0);
+semctl(chopstick[i%5],0,GETVAL,0);
+printf("\n philospher %d is thinking",i);
+sleep(1);
+wait(chopstick[i-1]);
+wait(chopstick[i%5]);
+printf("\n philospher %d is eating ",i);
+signal(chopstick[i%5]);
+signal(chopstick[i-1]);
+sleep(2);
+
+}
+}
+int main()
+{
+int i;
+key_t key[5];
+for(i=0;i<5;i++)
+{
+key[i]=ftok("/home/gaurav/os",(i+3));
+if((chopstick[i]=semget(key[i],1,0666|IPC_CREAT))<0)
+printf("\n semaphore error..");
+arg.val=1;
+semctl(chopstick[i],0,SETVAL,arg);
+}
+
+pthread_t p[5];
+for(i=0;i<5;i++)
+pthread_create(&p[i],NULL,philospher,(void*)&i);
+for(i=0;i<5;i++)
+pthread_join(p[i],NULL);
+return 0;
+}

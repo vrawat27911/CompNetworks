@@ -1,0 +1,32 @@
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+
+
+char serverbuf[1000];
+char clintbuf[1000];
+
+
+int main()
+{
+
+int fds,fdc,n;
+fds=open("servertext.txt",O_RDWR);
+fdc=open("clinttext.txt",O_RDWR);
+printf("\n welcome to clint process");
+while(1)
+{printf("\n server::\t");
+n=read(fdc,clintbuf,1000);
+write(1,clintbuf,n);
+printf("\n clint::\t");
+gets(serverbuf);
+write(fdc,serverbuf,strlen(serverbuf));
+}
+
+return 0;
+}
+
+
